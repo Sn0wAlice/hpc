@@ -5,8 +5,23 @@
 # What is hpc?
 **hpc** is a [reverse shell](https://en.wikipedia.org/wiki/Shell_shoveling) / [backdoor](https://en.wikipedia.org/wiki/Backdoor_(computing)) that can be used to gain access to a remote machine. It is written in rust (fuck python) and can be used to execute commands on the remote machine.
 
-# Install
+# How to ?
+
+## Install
 Todo
+
+## Understand files: 
+```
+hpc
+ | admin
+ |\   admin software
+ |
+ | client
+ |\   the "malware" for infected device
+ |
+ | server
+ |\   server source code
+```
 
 # Use me
 Todo
