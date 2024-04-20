@@ -75,47 +75,47 @@ jobs:
             os: ubuntu-latest
             dir: client
             artifact_name: client/target/release/hpc
-            asset_name: hpc-client-${{needs.newversion.outputs.version}}-${{ matrix.os }}
+            asset_name: hpc-client-${{needs.newversion.outputs.version}}
           - name: linux-server
             os: ubuntu-latest
             dir: server
             artifact_name: server/target/release/hpc
-            asset_name: hpc-server-${{needs.newversion.outputs.version}}-${{ matrix.os }}
+            asset_name: hpc-server-${{needs.newversion.outputs.version}}
           - name: linux-admin
             os: ubuntu-latest
             dir: admin
             artifact_name: admin/target/release/hpc
-            asset_name: hpc-admin-${{needs.newversion.outputs.version}}-${{ matrix.os }}
+            asset_name: hpc-admin-${{needs.newversion.outputs.version}}
           - name: windows-cli
             os: windows-latest
             dir: client
             artifact_name: client/target/release/hpc.exe
-            asset_name: hpc-client-${{needs.newversion.outputs.version}}-${{ matrix.os }}.exe
+            asset_name: hpc-client-${{needs.newversion.outputs.version}}.exe
           - name: windows-server
             os: windows-latest
             dir: server
             artifact_name: server/target/release/hpc.exe
-            asset_name: hpc-server-${{needs.newversion.outputs.version}}-${{ matrix.os }}.exe
+            asset_name: hpc-server-${{needs.newversion.outputs.version}}.exe
           - name: windows-admin
             os: windows-latest
             dir: admin
             artifact_name: admin/target/release/hpc.exe
-            asset_name: hpc-admin-${{needs.newversion.outputs.version}}-${{ matrix.os }}.exe
+            asset_name: hpc-admin-${{needs.newversion.outputs.version}}.exe
           - name: macos-cli
             os: macos-latest
             dir: client
             artifact_name: client/target/release/hpc
-            asset_name: hpc-client-${{needs.newversion.outputs.version}}-${{ matrix.os }}
+            asset_name: hpc-client-${{needs.newversion.outputs.version}}
           - name: macos-server
             os: macos-latest
             dir: server
             artifact_name: server/target/release/hpc
-            asset_name: hpc-server-${{needs.newversion.outputs.version}}-${{ matrix.os }}
+            asset_name: hpc-server-${{needs.newversion.outputs.version}}
           - name: macos-admin
             os: macos-latest
             dir: admin
             artifact_name: admin/target/release/hpc
-            asset_name: hpc-admin-${{needs.newversion.outputs.version}}-${{ matrix.os }}
+            asset_name: hpc-admin-${{needs.newversion.outputs.version}}
 
     steps:
       - uses: actions/checkout@v4
