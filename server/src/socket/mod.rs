@@ -132,6 +132,30 @@ impl TcpServer {
         }
     }
 
+    pub fn send_debug_message(&self, client_uuid: Uuid) -> bool {
+        let clients = self.clients.lock().unwrap();
+        if let Some(mut client) = clients.get(&client_uuid) {
+            let message = "Hello from server";
+            if let Err(e) = client.write_all(message.as_bytes()) {
+                println!("Error writing to client {}: {}", client_uuid, e);
+            }
+            return true;
+        }
+        false
+    }
+
+    pub fn send_message(&self, client_uuid: Uuid, data: String) -> bool {
+        let clients = self.clients.lock().unwrap();
+        if let Some(mut client) = clients.get(&client_uuid) {
+            let message = data;
+            if let Err(e) = client.write_all(message.as_bytes()) {
+                println!("Error writing to client {}: {}", client_uuid, e);
+            }
+            return true;
+        }
+        false
+    }
+
 }
 
 

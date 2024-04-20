@@ -12,6 +12,10 @@ pub async fn manager(command:String) {
             // if the first word is admin, then call the admin function
             admin::exec(command.clone(), words).await;
         },
+        "clients" => {
+            // if the first word is clients, then call the clients function
+            clients::exec(command.clone(), words).await;
+        },
         _ => {
             // if the first word is not admin, then print an error message
             println!("Error: Command not found");

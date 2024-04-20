@@ -43,6 +43,10 @@ async fn handler(path: web::Path<String>, mut payload: web::Payload, socket_serv
         path if path.starts_with("admin/") => {
             admin::admin(path, parsed_json, socket_server).await
         }
+
+        path if path.starts_with("clients/") => {
+            clients::clients(path, parsed_json, socket_server).await
+        }
         
         _ => {
             println!("404 Not Found: {}", path.to_string());

