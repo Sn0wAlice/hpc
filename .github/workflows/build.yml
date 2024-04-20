@@ -1,0 +1,148 @@
+name: Build
+
+# Controls when the workflow will run
+on:
+  workflow_dispatch:
+  
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+
+  ## get the old version and increment it
+  newversion:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.step1.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: check
+        id: step1
+        run: |
+          # get version from Cargo.toml
+          VERSION=$(grep -oP 'version = "\K[^"]+' Cargo.toml)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+  ## Create a release in github to save the tag
+  release:
+    needs: newversion
+    runs-on: ubuntu-latest
+
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{needs.newversion.outputs.version}}
+          release_name: Release ${{needs.newversion.outputs.version}}
+          body: |
+            See git log for changes
+          draft: false
+          prerelease: false
+      
+      - name: Push tag
+        run: |
+          git tag ${{needs.newversion.outputs.version}}
+          git push origin ${{needs.newversion.outputs.version}}
+
+
+  publish:
+    needs: release
+    name: Publish for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        name: [
+            linux,
+            windows,
+            macos
+        ]
+
+        include:
+          - name: linux-cli
+            os: ubuntu-latest
+            dir: client
+            artifact_name: client/target/release/hpc
+            asset_name: hpc-client-${{needs.newversion.outputs.version}}-${{ matrix.os }}
+          - name: linux-server
+            os: ubuntu-latest
+            dir: server
+            artifact_name: server/target/release/hpc
+            asset_name: hpc-server-${{needs.newversion.outputs.version}}-${{ matrix.os }}
+          - name: linux-admin
+            os: ubuntu-latest
+            dir: admin
+            artifact_name: admin/target/release/hpc
+            asset_name: hpc-admin-${{needs.newversion.outputs.version}}-${{ matrix.os }}
+          - name: windows-cli
+            os: windows-latest
+            dir: client
+            artifact_name: client/target/release/hpc.exe
+            asset_name: hpc-client-${{needs.newversion.outputs.version}}-${{ matrix.os }}.exe
+          - name: windows-server
+            os: windows-latest
+            dir: server
+            artifact_name: server/target/release/hpc.exe
+            asset_name: hpc-server-${{needs.newversion.outputs.version}}-${{ matrix.os }}.exe
+          - name: windows-admin
+            os: windows-latest
+            dir: admin
+            artifact_name: admin/target/release/hpc.exe
+            asset_name: hpc-admin-${{needs.newversion.outputs.version}}-${{ matrix.os }}.exe
+          - name: macos-cli
+            os: macos-latest
+            dir: client
+            artifact_name: client/target/release/hpc
+            asset_name: hpc-client-${{needs.newversion.outputs.version}}-${{ matrix.os }}
+          - name: macos-server
+            os: macos-latest
+            dir: server
+            artifact_name: server/target/release/hpc
+            asset_name: hpc-server-${{needs.newversion.outputs.version}}-${{ matrix.os }}
+          - name: macos-admin
+            os: macos-latest
+            dir: admin
+            artifact_name: admin/target/release/hpc
+            asset_name: hpc-admin-${{needs.newversion.outputs.version}}-${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+
+      - name: go to dir
+        run: cd ${{ matrix.dir }}
+
+      - name: Build
+        run: cargo build --release
+
+      - name: Upload binaries to release
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.asset_name }}
+          path: ${{ matrix.artifact_name }}
+
+      - name: Upload release asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.release.outputs.upload_url }}
+          asset_path: ${{ matrix.artifact_name }}
+          asset_name: ${{ matrix.asset_name }}
+          asset_content_type: application/octet-stream
