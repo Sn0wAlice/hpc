@@ -125,11 +125,8 @@ jobs:
           profile: minimal
           toolchain: stable
 
-      - name: go to dir
-        run: cd ${{ matrix.dir }}
-
       - name: Build
-        run: cargo build --release
+        run: cargo build --release --manifest-path ${{ matrix.dir }}/Cargo.toml
 
       - name: Upload binaries to release
         uses: actions/upload-artifact@v2
