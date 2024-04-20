@@ -65,9 +65,9 @@ jobs:
     strategy:
       matrix:
         name: [
-            linux,
-            windows,
-            macos
+          linux-cli, linux-server, linux-admin,
+          windows-cli, windows-server, windows-admin,
+          macos-cli, macos-server, macos-admin
         ]
 
         include:
