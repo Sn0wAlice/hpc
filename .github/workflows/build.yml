@@ -26,7 +26,7 @@ jobs:
         id: step1
         run: |
           # get version from Cargo.toml
-          VERSION=$(grep -oP 'version = "\K[^"]+' Cargo.toml)
+          VERSION=$(grep -oP 'version = "\K[^"]+' v.toml)
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
   ## Create a release in github to save the tag
