@@ -2,9 +2,12 @@ use std::collections::HashMap;
 use std::net::{TcpListener, TcpStream};
 use std::io::{Read, Write};
 use std::sync::{Arc, Mutex};
-use std::{string, thread};
+use std::thread;
 use serde_json::Value;
 use uuid::Uuid;
+use colored::Colorize;
+
+use crate::helper::logs::*;
 
 pub struct TcpServer {
     clients: Arc<Mutex<HashMap<Uuid, TcpStream>>>,
@@ -14,7 +17,7 @@ pub struct TcpServer {
 impl TcpServer {
     fn new(addr: &str) -> std::io::Result<TcpServer> {
         let listener = TcpListener::bind(addr)?;
-        println!("TCP Server listening on {}", addr);
+        log_info(&format!("TCP Server listening on {}", addr.bold().purple()));
         let clients = Arc::new(Mutex::new(HashMap::new()));
         let server = Self {
             clients: clients.clone(),
@@ -84,7 +87,7 @@ impl TcpServer {
             for stream in self.listener.incoming() {
                 let stream = stream.expect("Failed to accept connection");
                 let client_uuid = Uuid::new_v4();
-                println!("New client connected with UUID: {}", client_uuid);
+                log_info(&format!("New client connected with UUID: {}", client_uuid.to_string().bold().purple()));
         
                 // Store the client in the hashmap
                 let clients_clone = Arc::clone(&self.clients);
@@ -118,7 +121,7 @@ impl TcpServer {
         if let Some(mut client) = clients.get(&client_uuid) {
             let message = "Hello from server";
             if let Err(e) = client.write_all(message.as_bytes()) {
-                println!("Error writing to client {}: {}", client_uuid, e);
+                log_error(&format!("Error writing to client {}: {}", client_uuid, e));
             }
         }
     }
@@ -127,7 +130,7 @@ impl TcpServer {
         let clients = self.clients.lock().unwrap();
         if let Some(mut client) = clients.get(&client_uuid) {
             if let Err(e) = client.write_all(message.as_bytes()) {
-                println!("Error writing to client {}: {}", client_uuid, e);
+                log_error(&format!("Error writing to client {}: {}", client_uuid, e));
             }
         }
     }
@@ -137,7 +140,7 @@ impl TcpServer {
         if let Some(mut client) = clients.get(&client_uuid) {
             let message = "Hello from server";
             if let Err(e) = client.write_all(message.as_bytes()) {
-                println!("Error writing to client {}: {}", client_uuid, e);
+                log_error(&format!("Error writing to client {}: {}", client_uuid, e));
             }
             return true;
         }
@@ -149,7 +152,7 @@ impl TcpServer {
         if let Some(mut client) = clients.get(&client_uuid) {
             let message = data;
             if let Err(e) = client.write_all(message.as_bytes()) {
-                println!("Error writing to client {}: {}", client_uuid, e);
+                log_error(&format!("Error writing to client {}: {}", client_uuid, e));
             }
             return true;
         }

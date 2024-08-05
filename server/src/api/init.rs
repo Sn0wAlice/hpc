@@ -1,5 +1,6 @@
 use actix_web::{web, Scope, post, HttpResponse, Responder, App};
 use serde_json::Value;
+use crate::helper::logs::log_debug;
 use crate::socket::TcpServer;
 use crate::socket::create_server;
 use futures::StreamExt;
@@ -8,8 +9,7 @@ const MAX_SIZE: usize = 262_144;
 
 #[post("/{path:.*}")]
 async fn handler(path: web::Path<String>, mut payload: web::Payload, socket_server: web::Data<TcpServer>) -> impl Responder {
-    println!("----------------------------------------");
-    println!("Received request: {}", path.to_string());
+    log_debug(&format!("Received request: {}", path.to_string()));
 
     // payload is a stream of Bytes objects
     let mut body = web::BytesMut::new();
@@ -30,15 +30,17 @@ async fn handler(path: web::Path<String>, mut payload: web::Payload, socket_serv
     // Get the expected data
     let str_data = std::str::from_utf8(&body).expect("Invalid UTF-8");
     let parsed_json: Value = serde_json::from_str(str_data).expect("Failed to parse JSON");
-    println!("Body {:?}", parsed_json);
+    log_debug(&format!("Received JSON: {:?}", parsed_json));
     
     let clients = socket_server.get_clients(); // Retrieve the client list
-    println!("TCP client {:?}", clients);
+    log_debug(&format!("Working with clients: {}", clients.len().to_string()));
 
 
     match path.clone().as_str() {
         "" => HttpResponse::Ok().content_type("application/json").body("{\"status\": \"OK\"}").customize(),
-
+        path if path.starts_with("clients/") => {
+            crate::api::routes::clients::clients(path, parsed_json, socket_server).await
+        }
         _ => {
             println!("404 Not Found: {}", path.to_string());
             HttpResponse::Ok().content_type("application/json").body("{\"error\": \"path not found\"}").customize()
